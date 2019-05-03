@@ -5,6 +5,8 @@ import FriendsList from "../../functional_components/FriendsList";
 import Tab from "react-bootstrap/Tab";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
+import ChatWindow from "../ChatWindow/ChatWindow";
+import AddChat from "../AddChat/AddChat";
 
 const LDP = new rdf.Namespace("http://www.w3.org/ns/ldp#");
 const RDF = new rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
@@ -23,7 +25,10 @@ class ChatPage extends React.Component {
     super(props);
     this.state = {
       webId: undefined,
-      friends: []
+      friends: [],
+      ownMessages: [],
+      friendMessages: [],
+      newChat: undefined
     };
   }
 
@@ -301,12 +306,69 @@ class ChatPage extends React.Component {
       });
   }
 
-  selectChat(e) {
-    //console.log(e.target.getAttribute("index"))
-    // if (e.target.getAttribute("class") == "row") {
-    //   console.log(e.target.getAttribute("style"))
-    // }
-    console.log(e.target)
+  addChat(e) {
+    const store = rdf.graph();
+    const fetcher = new rdf.Fetcher(store);
+    const updater = new rdf.UpdateManager(store);
+
+    const username = this.state.webId.split(".")[0].replace("https://", "");
+    const userInboxAddress = this.state.webId.replace(
+      "profile/card#me",
+      "inbox/"
+    );
+
+    const friendsName = e.target.getAttribute("webId").split(".")[0].replace("https://", "");
+    const friendsWebId = this.state.webId.replace(username, friendsName);
+
+    fetcher.load(userInboxAddress + friendsName).catch(err => {
+      const newChat = rdf.sym(userInboxAddress + friendsName);
+      const user = rdf.sym(this.state.webId);
+      const friend = rdf.sym(friendsWebId);
+      const newAclFile = rdf.sym(userInboxAddress + friendsName + ".acl").doc();
+      const viewerNode = rdf.sym(
+        userInboxAddress + friendsName + ".acl#viewer"
+      );
+      const ownerNode = rdf.sym(userInboxAddress + friendsName + ".acl#owner");
+
+      //Create new chat file
+      const newChatTriples = [
+        rdf.st(newChat, RDF("type"), MEET("Chat"), newChat.doc()),
+        rdf.st(newChat, DC("title"), rdf.lit("Chat", "en"), newChat.doc()),
+        rdf.st(newChat, DC("created"), new Date(), newChat.doc())
+      ];
+
+      updater.put(newChat, newChatTriples, "text/turtle", function(
+        uri,
+        ok,
+        message
+      ) {
+        if (ok)
+          console.log("Created new chatfile for chat data with " + friendsName);
+        else alert(message);
+      });
+
+      //Create new ACL File too
+
+      const newACLTriples = [
+        rdf.st(ownerNode, ACL("agent"), user, newAclFile),
+        rdf.st(ownerNode, ACL("accessTo"), newChat, newAclFile),
+        rdf.st(ownerNode, ACL("mode"), ACL("Control"), newAclFile),
+        rdf.st(ownerNode, ACL("mode"), ACL("Read"), newAclFile),
+        rdf.st(ownerNode, ACL("mode"), ACL("Write"), newAclFile),
+        rdf.st(viewerNode, ACL("agent"), friend, newAclFile),
+        rdf.st(viewerNode, ACL("accessTo"), newChat, newAclFile),
+        rdf.st(viewerNode, ACL("mode"), ACL("Read"), newAclFile)
+      ];
+
+      updater.put(newAclFile, newACLTriples, "text/turtle", function(
+        uri,
+        ok,
+        message
+      ) {
+        if (ok) console.log("New ACL File has been created");
+        else console.log(message);
+      });
+    });
   }
 
   componentDidMount() {
@@ -318,16 +380,22 @@ class ChatPage extends React.Component {
     return (
       <Tab.Container>
         <Row>
-        <Col lg />
-        <Col lg="3">
-          <FriendsList
-            onClick={this.selectChat.bind(this)}
-            friends={this.state.friends}
-          />
-        </Col>
-        <Col lg="7">
-        </Col>
-        <Col lg />
+          <Col lg />
+          <Col lg="3">
+            <AddChat onClick={this.addChat.bind(this)} />
+            <FriendsList
+              onClick={this.fetchMessages.bind(this)}
+              friends={this.state.friends}
+            />
+          </Col>
+          <Col lg="7">
+            <ChatWindow
+              friends={this.state.friends}
+              ownMessages={this.state.ownMessages}
+              friendMessages={this.state.friendMessages}
+            />
+          </Col>
+          <Col lg />
         </Row>
       </Tab.Container>
     );

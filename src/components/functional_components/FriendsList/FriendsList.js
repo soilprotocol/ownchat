@@ -1,14 +1,14 @@
 import React from "react";
-import Row from "react-bootstrap/Row";
 import ListGroup from "react-bootstrap/ListGroup";
 import FriendSlot from "../FriendSlot/FriendSlot";
 
 const FriendsList = props => {
   return (
-    <ListGroup variant="flush">
+    <ListGroup variant="flush" style={{maxHeight: "80%", overflowY: "scroll"}}>
       {props.friends.map((friend, index) => {
+        const username = friend.webId.split(".")[0].replace("https://", "");
         return (
-          <ListGroup.Item action href={"#" + index} key={index} onClick={props.onClick}>
+          <ListGroup.Item action href={"#" + username} key={index} onClick={props.onClick}>
             <FriendSlot friend={friend} index={index}/>
           </ListGroup.Item>
         );
