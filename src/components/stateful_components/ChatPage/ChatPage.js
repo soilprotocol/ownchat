@@ -1,10 +1,10 @@
 import React from "react";
 import auth from "solid-auth-client";
 import rdf from "rdflib";
-import NavBar from "../../functional_components/NavBar";
 import FriendsList from "../../functional_components/FriendsList";
-import Row from "react-bootstrap/Row";
+import Tab from "react-bootstrap/Tab";
 import Col from "react-bootstrap/Col";
+import Row from "react-bootstrap/Row";
 
 const LDP = new rdf.Namespace("http://www.w3.org/ns/ldp#");
 const RDF = new rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
@@ -29,7 +29,7 @@ class ChatPage extends React.Component {
 
   fetchUser() {
     auth.trackSession(session => {
-    if (session) {
+      if (session) {
         console.log("You are logged in... Fetching your data now");
         this.setState({
           webId: session.webId
@@ -301,18 +301,35 @@ class ChatPage extends React.Component {
       });
   }
 
+  selectChat(e) {
+    //console.log(e.target.getAttribute("index"))
+    // if (e.target.getAttribute("class") == "row") {
+    //   console.log(e.target.getAttribute("style"))
+    // }
+    console.log(e.target)
+  }
+
   componentDidMount() {
     this.fetchUser();
   }
 
   render() {
-    console.log(this.state)
+    console.log(this.state);
     return (
-      <Row>
-        <Col lg="1">
+      <Tab.Container>
+        <Row>
+        <Col lg />
+        <Col lg="3">
+          <FriendsList
+            onClick={this.selectChat.bind(this)}
+            friends={this.state.friends}
+          />
         </Col>
-        <FriendsList friends={this.state.friends}/>
-      </Row>
+        <Col lg="7">
+        </Col>
+        <Col lg />
+        </Row>
+      </Tab.Container>
     );
   }
 }

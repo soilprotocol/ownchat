@@ -1,14 +1,19 @@
 import React from "react";
 import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
+import ListGroup from "react-bootstrap/ListGroup";
+import FriendSlot from "../FriendSlot/FriendSlot";
 
 const FriendsList = props => {
   return (
-    <Col lg="3" style={{ border: "solid black 3px" }}>
-      {props.friends.map(friend => {
-        return <Row>{friend.webId}</Row>;
+    <ListGroup variant="flush">
+      {props.friends.map((friend, index) => {
+        return (
+          <ListGroup.Item action href={"#" + index} key={index} onClick={props.onClick}>
+            <FriendSlot friend={friend} index={index}/>
+          </ListGroup.Item>
+        );
       })}
-    </Col>
+    </ListGroup>
   );
 };
 
