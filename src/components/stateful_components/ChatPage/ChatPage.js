@@ -149,7 +149,7 @@ class ChatPage extends React.Component {
             : altMessageTimestamp.value;
           return {
             content: messageContentValue,
-            created: messageTimestampValue.replace("Z", "").split("T")
+            created: messageTimestampValue
           };
         });
         console.log(ownMessages)
@@ -336,7 +336,7 @@ class ChatPage extends React.Component {
 
   sortMessages(ownMessages, friendMessages) {
     if (ownMessages !== undefined && friendMessages !== undefined) {
-      var messages = [];
+      const messages = [];
       for (var message in ownMessages) {
         messages.push({ message: ownMessages[message], from: "me" });
         //console.log(new Date(ownMessages[message].created))
