@@ -1,0 +1,17 @@
+.container{
+    width: 90%;
+    display: flex;
+    margin: auto;
+}
+
+.message{
+    width: 80%;
+    color:grey;
+    font-size: 1.3em;
+}
+
+.friend{
+    margin-left: auto;
+    color: black;
+    text-align: right;
+}

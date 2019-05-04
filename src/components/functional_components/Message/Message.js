@@ -1,17 +1,14 @@
 import React from "react";
-import Row from "react-bootstrap/Row";
-import Col from "react-bootstrap/Col";
+import styles from './Message.module.css';
+import classNames from 'classnames';
 
 const Message = (props) => {
   return (
-    <Row>
-      <Col lg={{span: 6}}>
-        {props.from === "friend" ? props.message.content : ""}
-      </Col>
-      <Col lg={{span: 6}}>
-        {props.from === "me" ? props.message.content : ""}
-      </Col>
-    </Row>
+    <div className={styles.container}>
+      <div className={classNames(styles.message, {[styles.friend]: props.from === "friend"})}>
+        {props.message.content}
+      </div>
+    </div>
   );
 };
 
