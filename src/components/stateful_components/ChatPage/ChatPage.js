@@ -116,8 +116,7 @@ class ChatPage extends React.Component {
     });
   }
 
-  fetchMessages(e) {
-    console.log(e.target);
+  fetchMessages(friendsWebId) {
     const store = rdf.graph();
     const fetcher = new rdf.Fetcher(store);
 
@@ -127,7 +126,6 @@ class ChatPage extends React.Component {
       "inbox/"
     );
 
-    const friendsWebId = e.target.getAttribute("webid");
     const friendsName = friendsWebId.split(".")[0].replace("https://", "");
     const friendsInboxAddress = friendsWebId.replace(
       "profile/card#me",

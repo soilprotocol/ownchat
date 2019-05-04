@@ -8,6 +8,7 @@
 
 .nameText{
     flex-basis: 50%;
+    padding-left: 10px;
 }
 
 .image{
