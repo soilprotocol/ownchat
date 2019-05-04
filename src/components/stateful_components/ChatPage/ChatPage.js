@@ -12,7 +12,7 @@ import EmptyChat from "../../functional_components/EmptyChat/EmptyChat";
 
 const LDP = new rdf.Namespace("http://www.w3.org/ns/ldp#");
 const RDF = new rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
-const ACT = new rdf.Namespace("https://www.w3.org/ns/activitystreams#");
+//const ACT = new rdf.Namespace("https://www.w3.org/ns/activitystreams#");
 const FOAF = new rdf.Namespace("http://xmlns.com/foaf/0.1/");
 const VCARD = new rdf.Namespace("http://www.w3.org/2006/vcard/ns#");
 const ACL = new rdf.Namespace("http://www.w3.org/ns/auth/acl#");
@@ -69,6 +69,7 @@ class ChatPage extends React.Component {
           chats: chats
         });
         this.fetchContacts();
+        this.checkForMessages(chats);
       });
     });
   }
@@ -78,7 +79,7 @@ class ChatPage extends React.Component {
     const fetcher = new rdf.Fetcher(store);
 
     const webId = this.state.webId;
-    const inboxAddress = webId.replace("profile/card#me", "inbox/");
+    //const inboxAddress = webId.replace("profile/card#me", "inbox/");
 
     const permissionStore = rdf.graph();
     const permissionFetcher = new rdf.Fetcher(permissionStore);
@@ -132,68 +133,74 @@ class ChatPage extends React.Component {
       "inbox/" + username
     );
 
-    const messagePromises = [fetcher
-      .load(userInboxAddress + friendsName)
-      .then(response => {
-        const userInbox = rdf.sym(userInboxAddress + friendsName);
-        const ownMessages = store.each(userInbox, FLOW("message")).map(message => {
-          message = rdf.sym(message);
-          const messageContent = store.any(message, SIOC("content"));
-          const messageTimestamp = store.any(message, DC("created"));
-          const altMessageTimestamp = messageTimestamp
-            ? ""
-            : store.any(message, TERMS("created"));
-          const messageContentValue = messageContent.value;
-          const messageTimestampValue = messageTimestamp
-            ? messageTimestamp.value
-            : altMessageTimestamp.value;
-          return {
-            content: messageContentValue,
-            created: messageTimestampValue
-          };
-        });
-        console.log(ownMessages)
-        return ownMessages;
-      })
-      .catch(err => {
-        console.log("You haven't send any messages yet!");
-      })]
+    const messagePromises = [
+      fetcher
+        .load(userInboxAddress + friendsName)
+        .then(response => {
+          const userInbox = rdf.sym(userInboxAddress + friendsName);
+          const ownMessages = store
+            .each(userInbox, FLOW("message"))
+            .map(message => {
+              message = rdf.sym(message);
+              const messageContent = store.any(message, SIOC("content"));
+              const messageTimestamp = store.any(message, DC("created"));
+              const altMessageTimestamp = messageTimestamp
+                ? ""
+                : store.any(message, TERMS("created"));
+              const messageContentValue = messageContent.value;
+              const messageTimestampValue = messageTimestamp
+                ? messageTimestamp.value
+                : altMessageTimestamp.value;
+              return {
+                content: messageContentValue,
+                created: messageTimestampValue
+              };
+            });
+          console.log(ownMessages);
+          return ownMessages;
+        })
+        .catch(err => {
+          console.log("You haven't send any messages yet!");
+        })
+    ];
 
-    messagePromises.push(fetcher
-      .load(friendsInboxAddress)
-      .then(response => {
-        const friendMessages = store
-          .each(rdf.sym(friendsInboxAddress), FLOW("message"))
-          .map(message => {
-            message = rdf.sym(message.value);
-            const messageContent = store.any(message, SIOC("content"));
-            const messageTimestamp = store.any(message, DC("created"));
-            const altMessageTimestamp = messageTimestamp
-              ? ""
-              : store.any(message, TERMS("created"));
-            const messageContentValue = messageContent.value;
-            const messageTimestampValue = messageTimestamp
-              ? messageTimestamp.value
-              : altMessageTimestamp.value;
-            return {
-              content: messageContentValue,
-              created: messageTimestampValue
-            };
-          });
+    messagePromises.push(
+      fetcher
+        .load(friendsInboxAddress)
+        .then(response => {
+          const friendMessages = store
+            .each(rdf.sym(friendsInboxAddress), FLOW("message"))
+            .map(message => {
+              message = rdf.sym(message.value);
+              const messageContent = store.any(message, SIOC("content"));
+              const messageTimestamp = store.any(message, DC("created"));
+              const altMessageTimestamp = messageTimestamp
+                ? ""
+                : store.any(message, TERMS("created"));
+              const messageContentValue = messageContent.value;
+              const messageTimestampValue = messageTimestamp
+                ? messageTimestamp.value
+                : altMessageTimestamp.value;
+              return {
+                content: messageContentValue,
+                created: messageTimestampValue
+              };
+            });
           return friendMessages;
-      })
-      .catch(err => {
-        console.log("This friend has no chat with you yet.");
-      }));
+        })
+        .catch(err => {
+          console.log("This friend has no chat with you yet.");
+        })
+    );
 
-      console.log(messagePromises);
-      Promise.all(messagePromises).then(results => {
-        console.log(results)
-        const messages = this.sortMessages(results[0], results[1]);
-        this.setState({ messages: messages });
-      });
+    console.log(messagePromises);
+    Promise.all(messagePromises).then(results => {
+      console.log(results);
+      const messages = this.sortMessages(results[0], results[1]);
+      this.setState({ messages: messages });
+    });
 
-      console.log(this.state.messages)
+    console.log(this.state.messages);
   }
 
   sendMessage(e) {
@@ -203,14 +210,14 @@ class ChatPage extends React.Component {
     const fetcher = new rdf.Fetcher(store);
     const updater = new rdf.UpdateManager(store);
 
-    const username = this.state.webId.split(".")[0].replace("https://", "");
+    //const username = this.state.webId.split(".")[0].replace("https://", "");
     const userInboxAddress = this.state.webId.replace(
       "profile/card#me",
       "inbox/"
     );
 
     const friendsName = window.location.href.split("#")[1];
-    const friendsWebId = this.state.webId.replace(username, friendsName);
+    //const friendsWebId = this.state.webId.replace(username, friendsName);
 
     fetcher
       .load(userInboxAddress + friendsName)
@@ -309,11 +316,46 @@ class ChatPage extends React.Component {
       ) {
         if (ok) {
           console.log("New ACL File has been created");
-          window.location.href = window.location.href;
         } else {
           console.log(message);
         }
       });
+    });
+  }
+
+  checkForMessages(chats) {
+    console.log(chats);
+    const store = rdf.graph();
+    const fetcher = new rdf.Fetcher(store);
+
+    const username = this.state.webId.split(".")[0].replace("https://", "");
+    const userInboxAddress = this.state.webId.replace(
+      "profile/card#me",
+      "inbox/"
+    );
+
+    const inboxAddressess = chats
+      ? chats.map(chat => {
+          const chatName = chat.split(".")[0].replace("https://", "");
+          const inboxAddress =
+            userInboxAddress.replace(username, chatName) + username;
+          return inboxAddress;
+        })
+      : undefined;
+
+    inboxAddressess.forEach((inboxAddress) => {
+      var socket = new WebSocket(inboxAddress.replace("https", "wss"));
+      socket.onopen = function () {
+        this.send("sub " + inboxAddress)
+        console.log("sub to chat-socket");
+      };
+      socket.onmessage = function (msg) {
+        if (msg.data && msg.data.slice(0, 3) === "pub"){
+          const username = inboxAddress.split(".")[0].replace("https://", "");
+          const userWebId = "https://" + username  + ".solid.community/profile/card#me";
+          this.fetchMessages(userWebId);
+        }
+      }.bind(this);
     });
   }
 
@@ -325,6 +367,9 @@ class ChatPage extends React.Component {
           webId: session.webId
         });
         this.fetchChats();
+        // setInterval(() => {
+        //   this.fetchChats();
+        // }, 5000)
         //this.fetchMessages();
       }
     });
@@ -335,7 +380,7 @@ class ChatPage extends React.Component {
   }
 
   sortMessages(ownMessages, friendMessages) {
-    if (ownMessages !== undefined && friendMessages !== undefined) {
+    if (ownMessages !== undefined || friendMessages !== undefined) {
       const messages = [];
       for (var message in ownMessages) {
         messages.push({ message: ownMessages[message], from: "me" });
