@@ -12,6 +12,15 @@ class ChatWindow extends React.Component {
     };
   }
 
+  componentDidUpdate(){
+    var scrollDiv = document.getElementById("scrollDiv");
+    if(scrollDiv){
+      console.log("scroll baby scroll")
+      scrollDiv.scrollTop = scrollDiv.scrollHeight
+    }
+
+  }
+
   render() {
     console.log(this.props.messages)
     if (this.props.messages.length <= 0) {
@@ -34,7 +43,7 @@ class ChatWindow extends React.Component {
     })
 
     return (
-      <Tab.Content style={{ maxHeight: "calc(100% - 120px)", overflowY: "scroll", boxShadow:"4px 2px 4px rgba(0, 0, 0, 0.5)"}}>
+      <Tab.Content id="scrollDiv" style={{ maxHeight: "calc(100% - 120px)", overflowY: "scroll", boxShadow:"4px 2px 4px rgba(0, 0, 0, 0.5)"}}>
         {this.props.friends.map((friend, index) => {
           const username = friend.webId.split(".")[0].replace("https://", "");
           return (
