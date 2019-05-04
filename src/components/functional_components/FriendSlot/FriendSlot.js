@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "react-bootstrap/Image";
 import styles from './FriendSlot.module.css';
 
 const FriendSlot = props => {
