@@ -251,6 +251,8 @@ class ChatPage extends React.Component {
         updater.update(del, ins, (uri, ok, message) => {
           if (ok) {
             console.log("Message sent!");
+            const friendsWebId = "https://" + friendsName + ".solid.community/profile/card#me"
+            this.fetchMessages(friendsWebId);
           } else alert(message);
         });
       })
