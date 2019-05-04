@@ -6,7 +6,7 @@ const NavBar = props => {
   return (
     <div style={{paddingTop: "70px"}}>
       <Navbar bg="dark" variant="dark" fixed="top">
-        <Navbar.Brand>OWNCHAT</Navbar.Brand>
+        <Navbar.Brand style={{marginLeft: "auto", marginRight: "auto"}}>OWNCHAT</Navbar.Brand>
         {/* <Nav>
         <NavLink to="/">Chat</NavLink>
       </Nav> */}

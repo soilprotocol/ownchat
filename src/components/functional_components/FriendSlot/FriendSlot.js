@@ -12,6 +12,7 @@ const FriendSlot = props => {
         paddingBottom: "20px"
       }}
       index={props.index}
+      webid={friend.webId}
     >
       <Col lg="3" style={{ width: "20%" }}>
         <div
@@ -32,6 +33,7 @@ const FriendSlot = props => {
             }}
             src={friend.picture}
             alt={"Profile picture of " + friend.name}
+            webid={friend.webId}
           />
         </div>
       </Col>
@@ -45,7 +47,7 @@ const FriendSlot = props => {
           paddingLeft: "20%"
         }}
       >
-        <strong index={props.index}>{friend.name}</strong>
+        <strong index={props.index} webid={friend.webId}>{friend.name}</strong>
       </Col>
       <Col lg />
     </Row>

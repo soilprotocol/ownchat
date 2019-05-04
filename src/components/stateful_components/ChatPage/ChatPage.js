@@ -7,6 +7,8 @@ import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
 import ChatWindow from "../ChatWindow/ChatWindow";
 import AddChat from "../AddChat/AddChat";
+import ChatInput from "../ChatInput/ChatInput";
+import EmptyChat from "../../functional_components/EmptyChat/EmptyChat";
 
 const LDP = new rdf.Namespace("http://www.w3.org/ns/ldp#");
 const RDF = new rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
@@ -25,31 +27,57 @@ class ChatPage extends React.Component {
     super(props);
     this.state = {
       webId: undefined,
-      friends: [],
-      ownMessages: [],
-      friendMessages: [],
+      contacts: [],
+      chats: [],
+      ownMessages: undefined,
+      friendMessages: undefined,
       newChat: undefined
     };
   }
 
-  fetchUser() {
-    auth.trackSession(session => {
-      if (session) {
-        console.log("You are logged in... Fetching your data now");
-        this.setState({
-          webId: session.webId
-        });
-        this.fetchFriends();
-        //this.fetchMessages();
-      }
-    });
-  }
-
-  fetchFriends() {
+  fetchChats() {
     const store = rdf.graph();
     const fetcher = new rdf.Fetcher(store);
 
     const webId = this.state.webId;
+    const inboxAddress = webId.replace("profile/card#me", "inbox/");
+
+    fetcher.load(inboxAddress).then(() => {
+      const inboxFiles = store.each(rdf.sym(inboxAddress), LDP("contains"));
+      const chats = [];
+      const chatChecks = [];
+      inboxFiles.forEach(inboxFile => {
+        const typeStore = rdf.graph();
+        const typeFetcher = new rdf.Fetcher(typeStore);
+        chatChecks.push(
+          typeFetcher.load(inboxFile.value).then(() => {
+            const chatBool = typeStore.any(null, RDF("type"), MEET("Chat"));
+            if (chatBool) {
+              const inboxFileValues = inboxFile.value.split("/");
+              const contactName = inboxFileValues[inboxFileValues.length - 1];
+              const contactWebId =
+                "https://" + contactName + ".solid.community/profile/card#me";
+              console.log(contactWebId);
+              chats.push(contactWebId);
+            }
+          })
+        );
+      });
+      Promise.all(chatChecks).then(results => {
+        this.setState({
+          chats: chats
+        });
+        this.fetchContacts();
+      });
+    });
+  }
+
+  fetchContacts() {
+    const store = rdf.graph();
+    const fetcher = new rdf.Fetcher(store);
+
+    const webId = this.state.webId;
+    const inboxAddress = webId.replace("profile/card#me", "inbox/");
 
     const permissionStore = rdf.graph();
     const permissionFetcher = new rdf.Fetcher(permissionStore);
@@ -57,44 +85,37 @@ class ChatPage extends React.Component {
     let viewerNode = webId.replace("card#me", "card.acl#viewer");
     permissionFetcher.load(viewerNode);
 
-    fetcher.load(webId).then(response => {
-      const friendsWebId = store.each(rdf.sym(webId), FOAF("knows"));
+    const friends = this.state.chats.map(friend => {
+      return fetcher.load(friend).then(() => {
+        console.log("Fetched " + friend + "'s Profile");
+        const friendName = store.any(rdf.sym(friend), FOAF("name"));
 
-      const friends = friendsWebId.map(friend => {
-        return fetcher.load(friend.value).then(() => {
-          console.log("Fetched " + friend.value + "'s Profile");
-          const friendName = store.any(rdf.sym(friend.value), FOAF("name"));
+        var friendPicture = store.any(rdf.sym(friend), VCARD("hasPhoto"));
+        friendPicture = friendPicture ? friendPicture.value : "";
 
-          var friendPicture = store.any(
-            rdf.sym(friend.value),
-            VCARD("hasPhoto")
-          );
-          friendPicture = friendPicture ? friendPicture.value : "";
-
-          const friendAccess =
-            permissionStore.statementsMatching(
-              viewerNode,
-              ACL("agent"),
-              rdf.sym(friend.value)
-            ).length > 0
-              ? true
-              : false;
-          //console.log(friend.value, friendAccess)
-          return {
-            name: friendName.value,
-            webId: friend.value,
-            access: friendAccess,
-            picture: friendPicture
-          };
-        });
+        const friendAccess =
+          permissionStore.statementsMatching(
+            viewerNode,
+            ACL("agent"),
+            rdf.sym(friend)
+          ).length > 0
+            ? true
+            : false;
+        //console.log(friend.value, friendAccess)
+        return {
+          name: friendName.value,
+          webId: friend,
+          access: friendAccess,
+          picture: friendPicture
+        };
       });
-      Promise.all(friends).then(results => {
-        this.setState({ friends: results });
-      });
+    });
+    Promise.all(friends).then(results => {
+      this.setState({ contacts: results });
     });
   }
 
-  fetchMessages() {
+  fetchMessages(e) {
     const store = rdf.graph();
     const fetcher = new rdf.Fetcher(store);
 
@@ -104,8 +125,8 @@ class ChatPage extends React.Component {
       "inbox/"
     );
 
-    const friendsName = window.location.href.split("#")[1];
-    const friendsWebId = this.state.webId.replace(username, friendsName);
+    const friendsWebId = e.target.getAttribute("webid");
+    const friendsName = friendsWebId.split(".")[0].replace("https://", "");
     const friendsInboxAddress = friendsWebId.replace(
       "profile/card#me",
       "inbox/" + username
@@ -177,7 +198,9 @@ class ChatPage extends React.Component {
       });
   }
 
-  sendMessage() {
+  sendMessage(e) {
+    const message = e.target.getAttribute("message");
+
     const store = rdf.graph();
     const fetcher = new rdf.Fetcher(store);
     const updater = new rdf.UpdateManager(store);
@@ -208,12 +231,7 @@ class ChatPage extends React.Component {
           rdf.st(newChat, FLOW("message"), newMessage, newChat.doc()),
           rdf.st(newMessage, DC("created"), new Date(), newChat.doc()),
           rdf.st(newMessage, FOAF("maker"), user, newChat.doc()),
-          rdf.st(
-            newMessage,
-            SIOC("content"),
-            rdf.lit(this.state.newMessage),
-            newChat.doc()
-          )
+          rdf.st(newMessage, SIOC("content"), rdf.lit(message), newChat.doc())
         ];
 
         updater.update(del, ins, (uri, ok, message) => {
@@ -223,86 +241,9 @@ class ChatPage extends React.Component {
         });
       })
       .catch(err => {
-        const newChat = rdf.sym(userInboxAddress + friendsName);
-        const user = rdf.sym(this.state.webId);
-        const friend = rdf.sym(friendsWebId);
-        const newAclFile = rdf
-          .sym(userInboxAddress + friendsName + ".acl")
-          .doc();
-        const viewerNode = rdf.sym(
-          userInboxAddress + friendsName + ".acl#viewer"
+        console.log(
+          "Could not find inbox... Maybe try to re-add this friend to your chat"
         );
-        const ownerNode = rdf.sym(
-          userInboxAddress + friendsName + ".acl#owner"
-        );
-
-        //Create new chat file
-        const newChatTriples = [
-          rdf.st(newChat, RDF("type"), MEET("Chat"), newChat.doc()),
-          rdf.st(newChat, DC("title"), rdf.lit("Chat", "en"), newChat.doc()),
-          rdf.st(newChat, DC("created"), new Date(), newChat.doc())
-        ];
-
-        updater.put(newChat, newChatTriples, "text/turtle", function(
-          uri,
-          ok,
-          message
-        ) {
-          if (ok)
-            console.log(
-              "Created new chatfile for chat data with " + friendsName
-            );
-          else alert(message);
-        });
-
-        //Create new ACL File too
-
-        const newACLTriples = [
-          rdf.st(ownerNode, ACL("agent"), user, newAclFile),
-          rdf.st(ownerNode, ACL("accessTo"), newChat, newAclFile),
-          rdf.st(ownerNode, ACL("mode"), ACL("Control"), newAclFile),
-          rdf.st(ownerNode, ACL("mode"), ACL("Read"), newAclFile),
-          rdf.st(ownerNode, ACL("mode"), ACL("Write"), newAclFile),
-          rdf.st(viewerNode, ACL("agent"), friend, newAclFile),
-          rdf.st(viewerNode, ACL("accessTo"), newChat, newAclFile),
-          rdf.st(viewerNode, ACL("mode"), ACL("Read"), newAclFile)
-        ];
-
-        updater.put(newAclFile, newACLTriples, "text/turtle", function(
-          uri,
-          ok,
-          message
-        ) {
-          if (ok) console.log("New ACL File has been created");
-          else console.log(message);
-        });
-
-        //Send message
-        const newMessage = new rdf.sym(
-          userInboxAddress +
-            friendsName +
-            "#Msg" +
-            Math.floor(Math.random() * 1231231241)
-        );
-
-        let del = [];
-        let ins = [
-          rdf.st(newChat, FLOW("message"), newMessage, newChat.doc()),
-          rdf.st(newMessage, DC("created"), new Date(), newChat.doc()),
-          rdf.st(newMessage, FOAF("maker"), user, newChat.doc()),
-          rdf.st(
-            newMessage,
-            SIOC("content"),
-            rdf.lit(this.state.newMessage),
-            newChat.doc()
-          )
-        ];
-
-        updater.update(del, ins, (uri, ok, message) => {
-          if (ok) {
-            console.log("Message sent!");
-          } else alert(message);
-        });
       });
   }
 
@@ -317,7 +258,10 @@ class ChatPage extends React.Component {
       "inbox/"
     );
 
-    const friendsName = e.target.getAttribute("webId").split(".")[0].replace("https://", "");
+    const friendsName = e.target
+      .getAttribute("webId")
+      .split(".")[0]
+      .replace("https://", "");
     const friendsWebId = this.state.webId.replace(username, friendsName);
 
     fetcher.load(userInboxAddress + friendsName).catch(err => {
@@ -365,9 +309,26 @@ class ChatPage extends React.Component {
         ok,
         message
       ) {
-        if (ok) console.log("New ACL File has been created");
-        else console.log(message);
+        if (ok) {
+          console.log("New ACL File has been created");
+          window.location.href = window.location.href;
+        } else {
+          console.log(message);
+        }
       });
+    });
+  }
+
+  fetchUser() {
+    auth.trackSession(session => {
+      if (session) {
+        console.log("You are logged in... Fetching your data now");
+        this.setState({
+          webId: session.webId
+        });
+        this.fetchChats();
+        //this.fetchMessages();
+      }
     });
   }
 
@@ -375,29 +336,60 @@ class ChatPage extends React.Component {
     this.fetchUser();
   }
 
+  sortMessages(ownMessages, friendMessages) {
+    var messages = [];
+    for (var message in ownMessages) {
+      messages.push({ message: ownMessages[message], from: "me" });
+      //console.log(new Date(ownMessages[message].created))
+    }
+
+    for (message in friendMessages) {
+      messages.push({ message: friendMessages[message], from: "friend" });
+    }
+
+    messages.sort(function(a, b) {
+      return new Date(a.message.created) - new Date(b.message.created);
+    });
+
+    return messages;
+  }
+
   render() {
+    const ownMessages = this.state.ownMessages;
+    const friendMessages = this.state.friendMessages;
+
+    const messages = this.sortMessages(ownMessages, friendMessages);
+
+    console.log(messages);
     console.log(this.state);
+
     return (
-      <Tab.Container>
-        <Row>
+      <Row style={{ height: "100%" }}>
+        <Tab.Container>
           <Col lg />
           <Col lg="3">
             <AddChat onClick={this.addChat.bind(this)} />
             <FriendsList
               onClick={this.fetchMessages.bind(this)}
-              friends={this.state.friends}
+              friends={this.state.contacts}
             />
           </Col>
           <Col lg="7">
-            <ChatWindow
-              friends={this.state.friends}
-              ownMessages={this.state.ownMessages}
-              friendMessages={this.state.friendMessages}
-            />
+            {this.state.ownMessages || this.state.friendMessages ? (
+              <div style={{height: "100%"}}>
+                <ChatWindow
+                  friends={this.state.contacts}
+                  messages={messages}
+                />
+                <ChatInput onClick={this.sendMessage.bind(this)} />
+              </div>
+            ) : (
+              <EmptyChat />
+            )}
           </Col>
           <Col lg />
-        </Row>
-      </Tab.Container>
+        </Tab.Container>
+      </Row>
     );
   }
 }

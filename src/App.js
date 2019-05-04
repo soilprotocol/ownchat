@@ -3,6 +3,7 @@ import auth from "solid-auth-client";
 import { BrowserRouter, Route, Switch } from "react-router-dom";
 import ChatPage from "./components/stateful_components/ChatPage";
 import NavBar from "./components/functional_components/NavBar";
+import GreetPage from "./components/functional_components/GreetPage/GreetPage";
 
 class App extends React.Component {
   constructor(props) {
@@ -45,8 +46,9 @@ class App extends React.Component {
   }
 
   render() {
+    console.log("Rerendered")
     return (
-      <div>
+      <div style={{ height: "80%" }}>
         <NavBar
           onClick={
             this.state.webId ? this.logout.bind(this) : this.login.bind(this)
@@ -54,9 +56,9 @@ class App extends React.Component {
           webId={this.state.webId}
         />
         <BrowserRouter>
-          <div>
+          <div style={{ height: "100%" }}>
             <Switch>
-              <Route path="/" render={() => <ChatPage />} />
+              <Route path="/" render={() => this.state.webId ? <ChatPage /> : <GreetPage onClick={this.login.bind(this)}/>} />
             </Switch>
           </div>
         </BrowserRouter>
