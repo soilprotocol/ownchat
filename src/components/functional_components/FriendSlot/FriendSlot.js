@@ -46,6 +46,7 @@ const FriendSlot = props => {
           width: "80%",
           paddingLeft: "20%"
         }}
+        webid={friend.webId}
       >
         <strong index={props.index} webid={friend.webId}>{friend.name}</strong>
       </Col>

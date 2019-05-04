@@ -13,7 +13,8 @@ class ChatWindow extends React.Component {
   }
 
   render() {
-    if (this.state.messages.length <= 0) {
+    console.log(this.props.messages)
+    if (this.props.messages.length <= 0) {
       return (
         <Tab.Content style={{ height: "80%", overflowY: "scroll" }}>
           {this.props.friends.map((friend, index) => {
@@ -28,7 +29,7 @@ class ChatWindow extends React.Component {
       );
     }
 
-    const chatMarkup = this.state.messages.map((message) => {
+    const chatMarkup = this.props.messages.map((message) => {
         return <Message message={message.message} from={message.from}/>;
     })
 

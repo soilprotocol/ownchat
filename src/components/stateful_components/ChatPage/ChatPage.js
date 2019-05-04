@@ -31,6 +31,7 @@ class ChatPage extends React.Component {
       chats: [],
       ownMessages: undefined,
       friendMessages: undefined,
+      messages: undefined,
       newChat: undefined
     };
   }
@@ -116,6 +117,7 @@ class ChatPage extends React.Component {
   }
 
   fetchMessages(e) {
+    console.log(e.target);
     const store = rdf.graph();
     const fetcher = new rdf.Fetcher(store);
 
@@ -132,40 +134,34 @@ class ChatPage extends React.Component {
       "inbox/" + username
     );
 
-    fetcher
+    const messagePromises = [fetcher
       .load(userInboxAddress + friendsName)
       .then(response => {
         const userInbox = rdf.sym(userInboxAddress + friendsName);
-        const ownMessages = store
-          .each(userInbox, FLOW("message"))
-          .map(message => {
-            message = rdf.sym(message);
-            const messageContent = store.any(message, SIOC("content"));
-            const messageTimestamp = store.any(message, DC("created"));
-            const altMessageTimestamp = messageTimestamp
-              ? ""
-              : store.any(message, TERMS("created"));
-            const messageContentValue = messageContent.value;
-            const messageTimestampValue = messageTimestamp
-              ? messageTimestamp.value
-              : altMessageTimestamp.value;
-            return {
-              content: messageContentValue,
-              created: messageTimestampValue.replace("Z", "").split("T")
-            };
-          });
-        this.setState({
-          ownMessages: ownMessages
+        const ownMessages = store.each(userInbox, FLOW("message")).map(message => {
+          message = rdf.sym(message);
+          const messageContent = store.any(message, SIOC("content"));
+          const messageTimestamp = store.any(message, DC("created"));
+          const altMessageTimestamp = messageTimestamp
+            ? ""
+            : store.any(message, TERMS("created"));
+          const messageContentValue = messageContent.value;
+          const messageTimestampValue = messageTimestamp
+            ? messageTimestamp.value
+            : altMessageTimestamp.value;
+          return {
+            content: messageContentValue,
+            created: messageTimestampValue.replace("Z", "").split("T")
+          };
         });
+        console.log(ownMessages)
+        return ownMessages;
       })
       .catch(err => {
-        this.setState({
-          ownMessages: []
-        });
         console.log("You haven't send any messages yet!");
-      });
+      })]
 
-    fetcher
+    messagePromises.push(fetcher
       .load(friendsInboxAddress)
       .then(response => {
         const friendMessages = store
@@ -186,16 +182,20 @@ class ChatPage extends React.Component {
               created: messageTimestampValue
             };
           });
-        this.setState({
-          friendMessages: friendMessages
-        });
+          return friendMessages;
       })
       .catch(err => {
-        this.setState({
-          friendMessages: []
-        });
         console.log("This friend has no chat with you yet.");
+      }));
+
+      console.log(messagePromises);
+      Promise.all(messagePromises).then(results => {
+        console.log(results)
+        const messages = this.sortMessages(results[0], results[1]);
+        this.setState({ messages: messages });
       });
+
+      console.log(this.state.messages)
   }
 
   sendMessage(e) {
@@ -337,31 +337,29 @@ class ChatPage extends React.Component {
   }
 
   sortMessages(ownMessages, friendMessages) {
-    var messages = [];
-    for (var message in ownMessages) {
-      messages.push({ message: ownMessages[message], from: "me" });
-      //console.log(new Date(ownMessages[message].created))
+    if (ownMessages !== undefined && friendMessages !== undefined) {
+      var messages = [];
+      for (var message in ownMessages) {
+        messages.push({ message: ownMessages[message], from: "me" });
+        //console.log(new Date(ownMessages[message].created))
+      }
+
+      for (message in friendMessages) {
+        messages.push({ message: friendMessages[message], from: "friend" });
+      }
+
+      messages.sort(function(a, b) {
+        return new Date(a.message.created) - new Date(b.message.created);
+      });
+
+      return messages;
+    } else {
+      return undefined;
     }
-
-    for (message in friendMessages) {
-      messages.push({ message: friendMessages[message], from: "friend" });
-    }
-
-    messages.sort(function(a, b) {
-      return new Date(a.message.created) - new Date(b.message.created);
-    });
-
-    return messages;
   }
 
   render() {
-    const ownMessages = this.state.ownMessages;
-    const friendMessages = this.state.friendMessages;
-
-    const messages = this.sortMessages(ownMessages, friendMessages);
-
-    console.log(messages);
-    console.log(this.state);
+    const messages = this.state.messages;
 
     return (
       <Row style={{ height: "100%" }}>
@@ -375,12 +373,9 @@ class ChatPage extends React.Component {
             />
           </Col>
           <Col lg="7">
-            {this.state.ownMessages || this.state.friendMessages ? (
-              <div style={{height: "100%"}}>
-                <ChatWindow
-                  friends={this.state.contacts}
-                  messages={messages}
-                />
+            {this.state.messages ? (
+              <div style={{ height: "100%" }}>
+                <ChatWindow friends={this.state.contacts} messages={messages} />
                 <ChatInput onClick={this.sendMessage.bind(this)} />
               </div>
             ) : (
