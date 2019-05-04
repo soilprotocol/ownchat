@@ -4,7 +4,7 @@ import { Button } from "yoda-design-system";
 
 const NavBar = props => {
   return (
-    <div style={{paddingTop: "70px"}}>
+    <div style={{height: "60px"}}>
       <Navbar bg="dark" variant="dark" fixed="top">
         <Navbar.Brand style={{marginLeft: "auto", marginRight: "auto"}}>OWNCHAT</Navbar.Brand>
         {/* <Nav>

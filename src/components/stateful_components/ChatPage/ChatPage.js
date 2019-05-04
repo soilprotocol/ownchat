@@ -5,10 +5,12 @@ import FriendsList from "../../functional_components/FriendsList";
 import Tab from "react-bootstrap/Tab";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
+import classNames from 'classnames';
 import ChatWindow from "../ChatWindow/ChatWindow";
 import AddChat from "../AddChat/AddChat";
 import ChatInput from "../ChatInput/ChatInput";
 import EmptyChat from "../../functional_components/EmptyChat/EmptyChat";
+import styles from './ChatPage.module.css'
 
 const LDP = new rdf.Namespace("http://www.w3.org/ns/ldp#");
 const RDF = new rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
@@ -360,19 +362,18 @@ class ChatPage extends React.Component {
     const messages = this.state.messages;
 
     return (
-      <Row style={{ height: "100%" }}>
+      <Row className={styles.container}>
         <Tab.Container>
-          <Col lg />
-          <Col lg="3">
+          <Col lg="4">
             <AddChat onClick={this.addChat.bind(this)} />
             <FriendsList
               onClick={this.fetchMessages.bind(this)}
               friends={this.state.contacts}
             />
           </Col>
-          <Col lg="7">
+          <Col lg="8" className={classNames(styles.container, styles.borderLeft)}> 
             {this.state.messages ? (
-              <div style={{ height: "100%" }}>
+              <div className={styles.container}>
                 <ChatWindow friends={this.state.contacts} messages={messages} />
                 <ChatInput onClick={this.sendMessage.bind(this)} />
               </div>
@@ -380,7 +381,6 @@ class ChatPage extends React.Component {
               <EmptyChat />
             )}
           </Col>
-          <Col lg />
         </Tab.Container>
       </Row>
     );

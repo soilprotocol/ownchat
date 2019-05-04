@@ -48,7 +48,7 @@ class App extends React.Component {
   render() {
     console.log("Rerendered")
     return (
-      <div style={{ height: "80%" }}>
+      <div style={{ height: "100%" }}>
         <NavBar
           onClick={
             this.state.webId ? this.logout.bind(this) : this.login.bind(this)
@@ -56,11 +56,11 @@ class App extends React.Component {
           webId={this.state.webId}
         />
         <BrowserRouter>
-          <div style={{ height: "100%" }}>
             <Switch>
-              <Route path="/" render={() => this.state.webId ? <ChatPage /> : <GreetPage onClick={this.login.bind(this)}/>} />
+              <div style={{ height: "calc(100vh - 90px)" }}>
+                <Route path="/" render={() => this.state.webId ? <ChatPage /> : <GreetPage onClick={this.login.bind(this)}/>} />
+              </div>
             </Switch>
-          </div>
         </BrowserRouter>
       </div>
     );

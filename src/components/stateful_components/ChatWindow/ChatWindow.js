@@ -16,7 +16,7 @@ class ChatWindow extends React.Component {
     console.log(this.props.messages)
     if (this.props.messages.length <= 0) {
       return (
-        <Tab.Content style={{ height: "80%", overflowY: "scroll" }}>
+        <Tab.Content style={{ height: "84%", overflowY: "scroll" }}>
           {this.props.friends.map((friend, index) => {
             const username = friend.webId.split(".")[0].replace("https://", "");
             return (
@@ -34,7 +34,7 @@ class ChatWindow extends React.Component {
     })
 
     return (
-      <Tab.Content style={{ height: "80%", overflowY: "scroll" }}>
+      <Tab.Content style={{ maxHeight: "calc(100% - 120px)", overflowY: "scroll", boxShadow:"4px 2px 4px rgba(0, 0, 0, 0.5)"}}>
         {this.props.friends.map((friend, index) => {
           const username = friend.webId.split(".")[0].replace("https://", "");
           return (
