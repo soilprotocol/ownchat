@@ -345,7 +345,10 @@ class ChatPage extends React.Component {
           const username = inboxAddress.split(".")[0].replace("https://", "");
           const userWebId =
             "https://" + username + ".solid.community/profile/card#me";
-          this.fetchMessages(userWebId);
+          const currentChatName = window.location.href.split("#") ? window.location.href.split("#")[1] : undefined;
+          if (currentChatName === username){
+            this.fetchMessages(userWebId);
+          }
         }
       }.bind(this);
   }
