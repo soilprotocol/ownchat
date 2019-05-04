@@ -381,8 +381,8 @@ class ChatPage extends React.Component {
         console.log("You are logged in... Fetching your data now");
         this.setState({
           webId: session.webId
-        });
-        this.fetchChats();
+        }, () => {console.log("feeeeeeeeeeeeeeeeeeeeeeeeeeeeeetch"); this.fetchChats()});
+        
         // setInterval(() => {
         //   this.fetchChats();
         // }, 5000)
@@ -419,10 +419,10 @@ class ChatPage extends React.Component {
 
   render() {
     const messages = this.state.messages;
-
+    console.log(this.state.messages)
     return (
       <Row className={styles.container}>
-        <Tab.Container>
+        <Tab.Container defaultActiveKey={`#${window.location.href.split("#")[1]}`} >
           <Col lg="4">
             <AddChat onClick={this.addChat.bind(this)} />
             <FriendsList
@@ -436,7 +436,7 @@ class ChatPage extends React.Component {
           >
             {this.state.messages ? (
               <div className={styles.container}>
-                <ChatWindow friends={this.state.contacts} messages={messages} />
+                <ChatWindow webId={this.state.webId}fetchMessage={this.fetchMessages.bind(this)} friends={this.state.contacts} messages={messages} />
                 <ChatInput onClick={this.sendMessage.bind(this)} />
               </div>
             ) : (
