@@ -5,7 +5,7 @@ import classNames from 'classnames';
 const Message = (props) => {
   return (
     <div className={styles.container}>
-      <div className={classNames(styles.message, {[styles.friend]: props.from === "friend"})}>
+      <div className={classNames(styles.message, props.from === "me" ? styles.me : styles.friend)}>
         {props.message.content}
       </div>
     </div>

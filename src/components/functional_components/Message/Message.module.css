@@ -1,17 +1,49 @@
 .container{
     width: 90%;
     display: flex;
-    margin: auto;
+    margin: 5px auto;
 }
 
 .message{
-    width: 80%;
-    color:grey;
     font-size: 1.3em;
+    border-radius: 10px;
+    padding: 2px 15px;
+    position: relative;
+}
+
+.me{
+    background-color: #0279fb;
+    text-align: right;
+    margin-left: auto;
+    color:white;
 }
 
 .friend{
-    margin-left: auto;
-    color: black;
-    text-align: right;
+    background-color: #e6e5eb;
+}
+
+.message.friend:after{
+    content: "";
+    width: 0px;
+    height: 0px;
+    position: absolute;
+    border-left: 10px solid transparent;
+    border-right: 10px solid #e6e5eb;
+    border-top: 10px solid #e6e5eb;
+    border-bottom: 10px solid transparent;
+    left: -15px;
+    top: 6px;
+}
+
+.message.me:after{
+    content: "";
+    width: 0px;
+    height: 0px;
+    position: absolute;
+    border-left: 10px solid #0279fb;
+    border-right: 10px solid transparent;
+    border-top: 10px solid #0279fb;
+    border-bottom: 10px solid transparent;
+    right: -15px;
+    top: 6px;
 }
