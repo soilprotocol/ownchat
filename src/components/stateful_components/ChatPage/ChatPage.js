@@ -5,12 +5,12 @@ import FriendsList from "../../functional_components/FriendsList";
 import Tab from "react-bootstrap/Tab";
 import Col from "react-bootstrap/Col";
 import Row from "react-bootstrap/Row";
-import classNames from 'classnames';
+import classNames from "classnames";
 import ChatWindow from "../ChatWindow/ChatWindow";
 import AddChat from "../AddChat/AddChat";
 import ChatInput from "../ChatInput/ChatInput";
 import EmptyChat from "../../functional_components/EmptyChat/EmptyChat";
-import styles from './ChatPage.module.css'
+import styles from "./ChatPage.module.css";
 
 const LDP = new rdf.Namespace("http://www.w3.org/ns/ldp#");
 const RDF = new rdf.Namespace("http://www.w3.org/1999/02/22-rdf-syntax-ns#");
@@ -72,6 +72,14 @@ class ChatPage extends React.Component {
         });
         this.fetchContacts();
         this.checkForMessages(chats);
+
+        const currentChatName = window.location.href.split("#")[1];
+        if (currentChatName) {
+          const currentChatWebId = "https://" + currentChatName + ".solid.community/profile/card#me";
+          if(chats.includes(currentChatWebId)){
+            this.fetchMessages(currentChatWebId);
+          }
+        }
       });
     });
   }
@@ -325,6 +333,23 @@ class ChatPage extends React.Component {
     });
   }
 
+  listenForMessage(inboxAddress, username) {
+    var socket = new WebSocket(inboxAddress.replace("https", "wss").replace("/inbox/" + username, ""));
+      socket.onopen = function() {
+        this.send("sub " + inboxAddress);
+        console.log("sub to chat-socket");
+      };
+      socket.onmessage = function(msg) {
+        console.log(msg);
+        if (msg.data && msg.data.slice(0, 3) === "pub") {
+          const username = inboxAddress.split(".")[0].replace("https://", "");
+          const userWebId =
+            "https://" + username + ".solid.community/profile/card#me";
+          this.fetchMessages(userWebId);
+        }
+      }.bind(this);
+  }
+
   checkForMessages(chats) {
     console.log(chats);
     const store = rdf.graph();
@@ -345,19 +370,8 @@ class ChatPage extends React.Component {
         })
       : undefined;
 
-    inboxAddressess.forEach((inboxAddress) => {
-      var socket = new WebSocket(inboxAddress.replace("https", "wss"));
-      socket.onopen = function () {
-        this.send("sub " + inboxAddress)
-        console.log("sub to chat-socket");
-      };
-      socket.onmessage = function (msg) {
-        if (msg.data && msg.data.slice(0, 3) === "pub"){
-          const username = inboxAddress.split(".")[0].replace("https://", "");
-          const userWebId = "https://" + username  + ".solid.community/profile/card#me";
-          this.fetchMessages(userWebId);
-        }
-      }.bind(this);
+    inboxAddressess.forEach(inboxAddress => {
+      this.listenForMessage(inboxAddress, username)
     });
   }
 
@@ -416,7 +430,10 @@ class ChatPage extends React.Component {
               friends={this.state.contacts}
             />
           </Col>
-          <Col lg="8" className={classNames(styles.container, styles.borderLeft)}> 
+          <Col
+            lg="8"
+            className={classNames(styles.container, styles.borderLeft)}
+          >
             {this.state.messages ? (
               <div className={styles.container}>
                 <ChatWindow friends={this.state.contacts} messages={messages} />
