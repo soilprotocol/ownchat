@@ -11,6 +11,12 @@
     position: relative;
     word-break: break-all;
     max-width: 80%;
+    white-space: pre-wrap;
+}
+
+.messageText{ 
+    text-align: left;
+    margin: 0;
 }
 
 .me{

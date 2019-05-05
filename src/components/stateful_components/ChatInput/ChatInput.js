@@ -20,6 +20,13 @@ class ChatInput extends React.Component {
         console.log(this.state)
     }
 
+    keyPress(e){
+      if(e.keyCode == 13 && !e.shiftKey){
+        e.preventDefault();
+        this.sendMessage();
+      }
+    }
+
     sendMessage(){
       this.props.onClick(this.state.message);
       this.setState({
@@ -37,6 +44,7 @@ class ChatInput extends React.Component {
                 rows="2"
                 as="textarea"
                 value={this.state.message}
+                onKeyDown={this.keyPress.bind(this)}
                 onChange={this.changeMessage.bind(this)}
               />
             </Col>
