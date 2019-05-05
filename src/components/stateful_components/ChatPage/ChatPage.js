@@ -34,7 +34,8 @@ class ChatPage extends React.Component {
       ownMessages: undefined,
       friendMessages: undefined,
       messages: undefined,
-      newChat: undefined
+      newContact: undefined,
+      currentChat: window.location.href.split("#").length > 1 ? "#" + window.location.href.split("#")[1] : undefined
     };
   }
 
@@ -332,6 +333,7 @@ class ChatPage extends React.Component {
           console.log(message);
         }
       });
+      this.fetchChats();
     });
   }
 
@@ -424,10 +426,10 @@ class ChatPage extends React.Component {
 
   render() {
     const messages = this.state.messages;
-    console.log(this.state.messages)
+    console.log(this.state)
     return (
       <Row className={styles.container}>
-        <Tab.Container defaultActiveKey={`#${window.location.href.split("#")[1]}`} >
+        <Tab.Container defaultActiveKey={this.state.currentChat} >
           <Col lg="4">
             <AddChat onClick={this.addChat.bind(this)} />
             <FriendsList

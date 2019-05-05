@@ -18,7 +18,7 @@ class AddChat extends React.Component {
     const url = e.target.value;
     xhr.onreadystatechange = () => {
       if (xhr.readyState === XMLHttpRequest.DONE) {
-        if (xhr.status === 200) {
+        if (xhr.status === 200 && this.state.canAddFriend === false) {
           this.setState({
             newChat: url,
             canAddFriend: true
@@ -33,6 +33,13 @@ class AddChat extends React.Component {
     const urlRegExp = new RegExp(/(\w+(:\/\/){1})(\w+\.)(\w+\.)(\w+\/)+/g);
     if (urlRegExp.test(e.target.value)) {
       xhr.open("GET", url);
+      xhr.send();
+    }
+
+    var format = /[ !@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/;
+    if (format.test(e.target.value) === false){
+      const alturl = "https://" + e.target.value + ".solid.community/profile/card#me";
+      xhr.open("GET", alturl);
       xhr.send();
     }
   }
