@@ -1,4 +1,9 @@
 .title p {
-    font-size: 0.1rem;
+    font-size: 0.6em;
     text-align: center;
+    margin-bottom: 0;
+}
+
+.title{
+    font-size: 1.5em;
 }

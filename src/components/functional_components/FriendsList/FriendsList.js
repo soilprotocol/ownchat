@@ -1,10 +1,10 @@
 import React from "react";
 import ListGroup from "react-bootstrap/ListGroup";
 import FriendSlot from "../FriendSlot/FriendSlot";
-
+import styles from './FriendsList.module.css';
 const FriendsList = props => {
   return (
-    <ListGroup variant="flush" style={{maxHeight: "80%", overflowY: "scroll"}}>
+    <ListGroup variant="flush" className={styles.scrollDiv}>
       {props.friends.map((friend, index) => {
         const username = friend.webId.split(".")[0].replace("https://", "");
         return (

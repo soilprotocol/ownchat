@@ -1,6 +1,7 @@
 import React from "react";
 import Tab from "react-bootstrap/Tab";
 import Message from "../../functional_components/Message/Message";
+import styles from './ChatWindow.module.css';
 
 class ChatWindow extends React.Component {
   constructor(props) {
@@ -43,7 +44,7 @@ class ChatWindow extends React.Component {
     })
 
     return (
-      <Tab.Content id="scrollDiv" style={{ maxHeight: "calc(100% - 120px)", overflowY: "scroll", boxShadow:"4px 2px 4px rgba(0, 0, 0, 0.5)"}}>
+      <Tab.Content className={styles.scrollDiv} id="scrollDiv" style={{ height: "calc(100% - 120px)", overflowY: "auto", boxShadow:"4px 2px 4px rgba(0, 0, 0, 0.5)"}}>
         {this.props.friends.map((friend, index) => {
           const username = friend.webId.split(".")[0].replace("https://", "");
           return (

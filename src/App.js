@@ -57,7 +57,7 @@ class App extends React.Component {
         />
         <BrowserRouter>
             <Switch>
-              <div style={{ height: "calc(100vh - 90px)" }}>
+              <div style={{ height: "100%", marginTop:90 }}>
                 <Route path="/" render={() => this.state.webId ? <ChatPage /> : <GreetPage onClick={this.login.bind(this)}/>} />
               </div>
             </Switch>
