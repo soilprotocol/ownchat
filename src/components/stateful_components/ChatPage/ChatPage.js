@@ -215,7 +215,8 @@ class ChatPage extends React.Component {
   }
 
   sendMessage(message) {
-
+    const timestamp = new Date();
+    
     const store = rdf.graph();
     const fetcher = new rdf.Fetcher(store);
     const updater = new rdf.UpdateManager(store);
@@ -244,7 +245,7 @@ class ChatPage extends React.Component {
         let del = [];
         let ins = [
           rdf.st(newChat, FLOW("message"), newMessage, newChat.doc()),
-          rdf.st(newMessage, DC("created"), new Date(), newChat.doc()),
+          rdf.st(newMessage, DC("created"), timestamp, newChat.doc()),
           rdf.st(newMessage, FOAF("maker"), user, newChat.doc()),
           rdf.st(newMessage, SIOC("content"), rdf.lit(message), newChat.doc())
         ];
