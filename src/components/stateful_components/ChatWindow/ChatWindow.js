@@ -2,6 +2,7 @@ import React from "react";
 import Tab from "react-bootstrap/Tab";
 import Message from "../../functional_components/Message/Message";
 import styles from './ChatWindow.module.css';
+import EmptyChat from "../../functional_components/EmptyChat/EmptyChat";
 
 class ChatWindow extends React.Component {
   constructor(props) {
@@ -30,8 +31,8 @@ class ChatWindow extends React.Component {
           {this.props.friends.map((friend, index) => {
             const username = friend.webId.split(".")[0].replace("https://", "");
             return (
-              <Tab.Pane eventKey={"#" + username} key={index}>
-                You do not have any messages with this person yet
+              <Tab.Pane eventKey={"#" + username} key={index} style={{height: "100%"}}>
+                <EmptyChat nomessages/>
               </Tab.Pane>
             );
           })}
