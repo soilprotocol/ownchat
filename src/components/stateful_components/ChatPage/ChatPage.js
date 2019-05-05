@@ -214,8 +214,7 @@ class ChatPage extends React.Component {
     console.log(this.state.messages);
   }
 
-  sendMessage(e) {
-    const message = e.target.getAttribute("message");
+  sendMessage(message) {
 
     const store = rdf.graph();
     const fetcher = new rdf.Fetcher(store);

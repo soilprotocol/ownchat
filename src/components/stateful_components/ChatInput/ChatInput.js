@@ -20,6 +20,13 @@ class ChatInput extends React.Component {
         console.log(this.state)
     }
 
+    sendMessage(){
+      this.props.onClick(this.state.message);
+      this.setState({
+        message:""
+      })
+    }
+
     render(){
         return (
           <Row className={styles.container}>
@@ -29,12 +36,13 @@ class ChatInput extends React.Component {
                 placeholder="Enter your message"
                 rows="2"
                 as="textarea"
+                value={this.state.message}
                 onChange={this.changeMessage.bind(this)}
               />
             </Col>
             <Col lg="3">
               {this.state.message !== "" ? (
-                <Button onClick={this.props.onClick} message={this.state.message}>
+                <Button onClick={this.sendMessage.bind(this)} message={this.state.message}>
                   Send
                 </Button>
               ) : (
