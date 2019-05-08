@@ -6,4 +6,10 @@
 
 .title{
     font-size: 1.5em;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.navbar {
+    height: 90px;
 }

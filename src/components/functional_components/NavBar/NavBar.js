@@ -6,8 +6,8 @@ import styles from "./NavBar.module.css";
 const NavBar = props => {
   return (
     <div >
-      <Navbar style={{height: "90px"}} bg="dark" variant="dark" fixed="top">
-        <Navbar.Brand style={{marginLeft: "auto", marginRight: "auto"}} className={styles.title}>OWNCHAT<p>by SOIL PROTOCOL</p></Navbar.Brand>
+      <Navbar className={styles.navbar} bg="dark" variant="dark" fixed="top">
+        <Navbar.Brand className={styles.title}>OWNCHAT<p>by SOIL PROTOCOL</p></Navbar.Brand>
         {/* <Nav>
         <NavLink to="/">Chat</NavLink>
       </Nav> */}

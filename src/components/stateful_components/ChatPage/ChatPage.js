@@ -1,6 +1,7 @@
 import React from "react";
 import auth from "solid-auth-client";
 import rdf from "rdflib";
+import sparql from "sparql-fiddle";
 import FriendsList from "../../functional_components/FriendsList";
 import Tab from "react-bootstrap/Tab";
 import Col from "react-bootstrap/Col";
@@ -35,7 +36,10 @@ class ChatPage extends React.Component {
       friendMessages: undefined,
       messages: undefined,
       newContact: undefined,
-      currentChat: window.location.href.split("#").length > 1 ? "#" + window.location.href.split("#")[1] : undefined
+      currentChat:
+        window.location.href.split("#").length > 1
+          ? "#" + window.location.href.split("#")[1]
+          : undefined
     };
   }
 
@@ -76,8 +80,9 @@ class ChatPage extends React.Component {
 
         const currentChatName = window.location.href.split("#")[1];
         if (currentChatName) {
-          const currentChatWebId = "https://" + currentChatName + ".solid.community/profile/card#me";
-          if(chats.includes(currentChatWebId)){
+          const currentChatWebId =
+            "https://" + currentChatName + ".solid.community/profile/card#me";
+          if (chats.includes(currentChatWebId)) {
             this.fetchMessages(currentChatWebId);
           }
         }
@@ -216,7 +221,7 @@ class ChatPage extends React.Component {
 
   sendMessage(message) {
     const timestamp = new Date();
-    
+
     const store = rdf.graph();
     const fetcher = new rdf.Fetcher(store);
     const updater = new rdf.UpdateManager(store);
@@ -253,7 +258,8 @@ class ChatPage extends React.Component {
         updater.update(del, ins, (uri, ok, message) => {
           if (ok) {
             console.log("Message sent!");
-            const friendsWebId = "https://" + friendsName + ".solid.community/profile/card#me"
+            const friendsWebId =
+              "https://" + friendsName + ".solid.community/profile/card#me";
             this.fetchMessages(friendsWebId);
           } else alert(message);
         });
@@ -338,23 +344,27 @@ class ChatPage extends React.Component {
   }
 
   listenForMessage(inboxAddress, username) {
-    var socket = new WebSocket(inboxAddress.replace("https", "wss").replace("/inbox/" + username, ""));
-      socket.onopen = function() {
-        this.send("sub " + inboxAddress);
-        console.log("sub to chat-socket");
-      };
-      socket.onmessage = function(msg) {
-        console.log(msg);
-        if (msg.data && msg.data.slice(0, 3) === "pub") {
-          const username = inboxAddress.split(".")[0].replace("https://", "");
-          const userWebId =
-            "https://" + username + ".solid.community/profile/card#me";
-          const currentChatName = window.location.href.split("#") ? window.location.href.split("#")[1] : undefined;
-          if (currentChatName === username){
-            this.fetchMessages(userWebId);
-          }
+    var socket = new WebSocket(
+      inboxAddress.replace("https", "wss").replace("/inbox/" + username, "")
+    );
+    socket.onopen = function() {
+      this.send("sub " + inboxAddress);
+      console.log("sub to chat-socket");
+    };
+    socket.onmessage = function(msg) {
+      console.log(msg);
+      if (msg.data && msg.data.slice(0, 3) === "pub") {
+        const username = inboxAddress.split(".")[0].replace("https://", "");
+        const userWebId =
+          "https://" + username + ".solid.community/profile/card#me";
+        const currentChatName = window.location.href.split("#")
+          ? window.location.href.split("#")[1]
+          : undefined;
+        if (currentChatName === username) {
+          this.fetchMessages(userWebId);
         }
-      }.bind(this);
+      }
+    }.bind(this);
   }
 
   checkForMessages(chats) {
@@ -378,7 +388,7 @@ class ChatPage extends React.Component {
       : undefined;
 
     inboxAddressess.forEach(inboxAddress => {
-      this.listenForMessage(inboxAddress, username)
+      this.listenForMessage(inboxAddress, username);
     });
   }
 
@@ -386,10 +396,16 @@ class ChatPage extends React.Component {
     auth.trackSession(session => {
       if (session) {
         console.log("You are logged in... Fetching your data now");
-        this.setState({
-          webId: session.webId
-        }, () => {console.log("feeeeeeeeeeeeeeeeeeeeeeeeeeeeeetch"); this.fetchChats()});
-        
+        this.setState(
+          {
+            webId: session.webId
+          },
+          () => {
+            console.log("feeeeeeeeeeeeeeeeeeeeeeeeeeeeeetch");
+            this.fetchChats();
+          }
+        );
+
         // setInterval(() => {
         //   this.fetchChats();
         // }, 5000)
@@ -424,26 +440,67 @@ class ChatPage extends React.Component {
     }
   }
 
+  fetchFriendsOfFriends(){
+    //TEST SPARQL CLIENT
+    if (this.state.webId){
+      const endpoint = this.state.webId
+      const query = "PREFIX n: <http://xmlns.com/foaf/0.1/> SELECT ?o WHERE {?s n:knows ?o.}";
+      const fiddle = {
+        data: endpoint,
+        query: query,
+        wanted: "Array"
+      };
+
+      sparql.run(fiddle).then((results) => {
+        const fofPromises = results.map((friend) => {
+          const fofFiddle = {
+            data: friend.o,
+            query: "PREFIX n: <http://xmlns.com/foaf/0.1/> PREFIX v: <http://www.w3.org/2006/vcard/ns#> SELECT ?name ?o WHERE {?s n:knows ?o. ?s v:fn ?name.}",
+            wanted: "Array"
+          }
+          return sparql.run(fofFiddle)
+        })
+        Promise.all(fofPromises).then((results) => {
+          console.log(results)
+          // results.map((result) => {
+          //   return {}
+          // })
+        })
+      }, (err) => {
+        
+      })
+    }
+  }
+
   render() {
+    this.fetchFriendsOfFriends();
+
     const messages = this.state.messages;
-    console.log(this.state)
+    console.log(this.state);
     return (
       <Row className={styles.container}>
-        <Tab.Container defaultActiveKey={this.state.currentChat} >
-          <Col lg="4">
+        <Tab.Container defaultActiveKey={this.state.currentChat}>
+          <Col lg="4" md="4">
             <AddChat onClick={this.addChat.bind(this)} />
             <FriendsList
+              className={styles.friendsList}
               onClick={this.fetchMessages.bind(this)}
               friends={this.state.contacts}
             />
           </Col>
           <Col
             lg="8"
+            md="8"
             className={classNames(styles.container, styles.borderLeft)}
           >
             {this.state.messages ? (
               <div className={styles.container}>
-                <ChatWindow webId={this.state.webId}fetchMessage={this.fetchMessages.bind(this)} friends={this.state.contacts} messages={messages} />
+                <ChatWindow
+                  webId={this.state.webId}
+                  fetchMessage={this.fetchMessages.bind(this)}
+                  friends={this.state.contacts}
+                  messages={messages}
+                />
                 <ChatInput onClick={this.sendMessage.bind(this)} />
               </div>
             ) : (
